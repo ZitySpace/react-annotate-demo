@@ -66,6 +66,7 @@ const App = () => {
 
         if (task === "detection")
           data.forEach((img: any) => {
+            img.url = img.url.replace("http://images.cocodataset.org", "");
             img.annotations = img.annotations.map(
               (anno: any, id: number) =>
                 new BoxLabel({
