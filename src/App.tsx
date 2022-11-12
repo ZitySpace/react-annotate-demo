@@ -76,7 +76,7 @@ const App = () => {
             );
           });
 
-        console.log(data);
+        // console.log(data);
         setImagesList(data);
       } catch (err) {
         console.log(err instanceof Error ? err.message : (err as string));
@@ -87,22 +87,26 @@ const App = () => {
   return (
     <div className="w-screen h-screen flex flex-col">
       <div className="w-full bg-gray-100 p-2 shadow-lg">
-        {/* <div className="xs:hidden">
-          <label htmlFor="tasks" className="sr-only">
-            Select a task
-          </label>
+        <div className="md:hidden">
           <select
             id="tasks"
             name="tasks"
-            className="block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
-            defaultValue={""}
+            className="block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+            required
+            defaultValue="placeholder"
+            onChange={(evt) => setTask(evt.target.value)}
           >
+            <option disabled hidden value="placeholder">
+              Select a task
+            </option>
             {taskOptions.map((task_) => (
-              <option key={task_}>{task_}</option>
+              <option key={task_} value={task_}>
+                {task_}
+              </option>
             ))}
           </select>
-        </div> */}
-        <div className="hidden sm:flex space-x-4">
+        </div>
+        <div className="hidden md:flex space-x-4">
           {taskOptions.map((task_) => (
             <button
               type="button"
