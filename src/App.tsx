@@ -64,19 +64,123 @@ const App = () => {
       try {
         const data = await getAnnotations(task);
 
-        if (task === "detection")
-          data.forEach((img: any) => {
-            img.url = img.url.replace("http://images.cocodataset.org", "");
-            img.annotations = img.annotations.map(
-              (anno: any, id: number) =>
-                new BoxLabel({
-                  ...anno,
-                  id,
-                })
-            );
-          });
+        data.forEach(
+          (img: any) =>
+            (img.url = img.url.replace("http://images.cocodataset.org", ""))
+        );
 
-        // console.log(data);
+        if (task === "detection")
+          data.forEach(
+            (img: any) =>
+              (img.annotations = img.annotations.map(
+                (anno: any, id: number) => new BoxLabel({ ...anno, id })
+              ))
+          );
+
+        if (task === "segmentation")
+          data.forEach(
+            (img: any) =>
+              (img.annotations = img.annotations.map(
+                (anno: any, id: number) => {
+                  const { mask: paths_, category } = anno;
+                  const paths = paths_.map((points: number[]) => ({
+                    points: Array.from(
+                      { length: points.length / 2 },
+                      (_, i) => ({
+                        x: points[2 * i],
+                        y: points[2 * i + 1],
+                      })
+                    ),
+                  }));
+                  return new MaskLabel({
+                    paths,
+                    id,
+                    category: category as string,
+                  });
+                }
+              ))
+          );
+
+        if (task === "keypoints")
+          data.forEach(
+            (img: any) =>
+              (img.annotations = img.annotations
+                .map((anno: any) => {
+                  const keypoints = anno.keypoints as number[];
+
+                  return Array.from(
+                    { length: keypoints.length / 3 },
+                    (_, i) => ({
+                      x: keypoints[3 * i],
+                      y: keypoints[3 * i + 1],
+                      visible: keypoints[3 * i + 2],
+                      category: `kp-${i}`,
+                    })
+                  ).filter((p) => p.visible === 2);
+                })
+                .flat()
+                .map((p: any, id: number) => new PointLabel({ ...p, id })))
+          );
+
+        if (task === "detection+segmentation")
+          data.forEach(
+            (img: any) =>
+              (img.annotations = img.annotations
+                .map((anno: any, id: number) => {
+                  const { category, x, y, w, h, mask: paths_ } = anno;
+                  const paths = paths_.map((points: number[]) => ({
+                    points: Array.from(
+                      { length: points.length / 2 },
+                      (_, i) => ({
+                        x: points[2 * i],
+                        y: points[2 * i + 1],
+                      })
+                    ),
+                  }));
+
+                  return [
+                    new BoxLabel({ x, y, w, h, category, id: 2 * id }),
+                    new MaskLabel({ paths, category, id: 2 * id + 1 }),
+                  ];
+                })
+                .flat())
+          );
+
+        if (task === "keypoints+segmentation")
+          data.forEach(
+            (img: any) =>
+              (img.annotations = img.annotations
+                .map((anno: any) => {
+                  const { category, mask: paths_, keypoints } = anno;
+                  const paths = paths_.map((points: number[]) => ({
+                    points: Array.from(
+                      { length: points.length / 2 },
+                      (_, i) => ({
+                        x: points[2 * i],
+                        y: points[2 * i + 1],
+                      })
+                    ),
+                  }));
+
+                  return [
+                    { category, paths, label: "Mask" },
+                    ...Array.from({ length: keypoints.length / 3 }, (_, i) => ({
+                      x: keypoints[3 * i],
+                      y: keypoints[3 * i + 1],
+                      visible: keypoints[3 * i + 2],
+                      category: `kp-${i}`,
+                      label: "Point",
+                    })).filter((p) => p.visible === 2),
+                  ];
+                })
+                .flat()
+                .map((l: any, id: number) =>
+                  l.label === "Mask"
+                    ? new MaskLabel({ ...l, id })
+                    : new PointLabel({ ...l, id })
+                ))
+          );
+
         setImagesList(data);
       } catch (err) {
         console.log(err instanceof Error ? err.message : (err as string));
