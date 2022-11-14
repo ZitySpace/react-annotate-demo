@@ -1,0 +1,5 @@
+{
+    "rewrites": [
+        { "source": "/:image*", "destination": "http://images.cocodataset.org/:image*" }
+    ]
+}

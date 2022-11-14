@@ -41,7 +41,10 @@ const requestTemplate =
     return dataTransformer ? dataTransformer(data) : data;
   };
 
-const apiEndpoint = process.env.REACT_APP_APIEndpoint;
+const apiEndpoint =
+  process.env.NODE_ENV === "development"
+    ? process.env.REACT_APP_DEV_APIEndpoint
+    : process.env.REACT_APP_PROD_APIEndpoint;
 
 const getAnnotations = requestTemplate((task: string) => ({
   url: apiEndpoint + "/" + task,
