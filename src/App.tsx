@@ -6,7 +6,7 @@ import {
   BoxLabel,
   MaskLabel,
   PointLabel,
-} from "@ZitySpace/react-annotate";
+} from "@zityspace/react-annotate";
 
 const responseHandlerTemplate = async (response: Response) => {
   const data = await response.json();
