@@ -1,5 +1,4 @@
 import "./index.css";
-import "@zityspace/react-annotate/dist/index.css";
 
 import React from "react";
 import ReactDOM from "react-dom";
