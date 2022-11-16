@@ -90,15 +90,15 @@ Check the `task` dependant effect in `src/App.tsx` as reference to know how to t
   imagesList: ImageData[];
   initIndex?: number;
   categories?: string[];
-  getImage?: (imageName: string) => Promise<string>;
-  onSave: (curImageData: ImageData) => boolean;
+  getImage?: (imageName: string) => Promise<string> | string;
+  onSave: (curImageData: ImageData) => Promise<boolean> | boolean;
   onError?: (message: string, context?: any) => void;
-  onAddCategory: (category: string) => boolean;
+  onAddCategory: (category: string) => Promise<boolean> | boolean;
   onRenameCategory: (
     oldCategory: string,
     newCategory: string,
     timestamp?: string
-  ) => boolean;
+  ) => Promise<boolean> | boolean;
 }
 ```
 
