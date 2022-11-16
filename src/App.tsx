@@ -236,18 +236,18 @@ const App = () => {
       <Annotator
         imagesList={imagesList}
         initIndex={0}
-        onSave={(d: ImageData) => {
+        onSave={async (d: ImageData) => {
           console.log(d);
           return true;
         }}
         onError={(m: string, c: any) => {
           console.log(m, c);
         }}
-        onAddCategory={(c: string) => {
+        onAddCategory={async (c: string) => {
           console.log("add new category ", c);
           return true;
         }}
-        onRenameCategory={(o: string, n: string, t?: string) => {
+        onRenameCategory={async (o: string, n: string, t?: string) => {
           console.log(o, " -> ", n, " @ ", t);
           return true;
         }}
