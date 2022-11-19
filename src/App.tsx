@@ -6,6 +6,7 @@ import {
   BoxLabel,
   MaskLabel,
   PointLabel,
+  KeypointsLabel,
 } from "@zityspace/react-annotate";
 
 const responseHandlerTemplate = async (response: Response) => {
@@ -105,24 +106,54 @@ const App = () => {
           );
 
         if (task === "keypoints")
-          data.forEach(
-            (img: any) =>
-              (img.annotations = img.annotations
-                .map((anno: any) => {
-                  const keypoints = anno.keypoints as number[];
+          data.forEach((img: any) =>
+            (img.annotations = img.annotations
+              .map((anno: any, id: number) => {
+                const { keypoints } = anno;
+                const points = Array.from(
+                  { length: keypoints.length / 3 },
+                  (_, i) => ({
+                    x: keypoints[3 * i],
+                    y: keypoints[3 * i + 1],
+                    vis: keypoints[3 * i + 2] === 2,
+                    sid: keypoints[3 * i + 2] === 0 ? -1 : i + 1,
+                  })
+                ).filter((pt) => pt.sid !== -1);
 
-                  return Array.from(
-                    { length: keypoints.length / 3 },
-                    (_, i) => ({
-                      x: keypoints[3 * i],
-                      y: keypoints[3 * i + 1],
-                      visible: keypoints[3 * i + 2],
-                      category: `kp-${i}`,
-                    })
-                  ).filter((p) => p.visible === 2);
-                })
-                .flat()
-                .map((p: any, id: number) => new PointLabel({ ...p, id })))
+                if (!points.length) return;
+
+                return new KeypointsLabel({
+                  keypoints: {
+                    points,
+                    structure: [
+                      [16, 14],
+                      [14, 12],
+                      [17, 15],
+                      [15, 13],
+                      [12, 13],
+                      [6, 12],
+                      [7, 13],
+                      [6, 7],
+                      [6, 8],
+                      [7, 9],
+                      [8, 10],
+                      [9, 11],
+                      [2, 3],
+                      [1, 2],
+                      [1, 3],
+                      [2, 4],
+                      [3, 5],
+                      [4, 6],
+                      [5, 7],
+                    ],
+                  },
+                  id,
+                  category: "person",
+                });
+              })
+              .filter((l: undefined | KeypointsLabel) => l)).forEach(
+              (l: KeypointsLabel, i: number) => (l.id = i)
+            )
           );
 
         if (task === "detection+segmentation")
