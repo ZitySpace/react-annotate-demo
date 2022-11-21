@@ -1,13 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import {
-  Annotator,
-  ImageData,
-  BoxLabel,
-  MaskLabel,
-  PointLabel,
-  KeypointsLabel,
-} from "@zityspace/react-annotate";
+import { Annotator, ImageData } from "@zityspace/react-annotate";
 
 const responseHandlerTemplate = async (response: Response) => {
   const data = await response.json();
@@ -75,17 +68,14 @@ const App = () => {
 
         if (task === "detection")
           data.forEach(
-            (img: any) =>
-              (img.annotations = img.annotations.map(
-                (anno: any, id: number) => new BoxLabel({ ...anno, id })
-              ))
+            (img: any) => (img.annotations = { box: img.annotations })
           );
 
         if (task === "segmentation")
           data.forEach(
             (img: any) =>
-              (img.annotations = img.annotations.map(
-                (anno: any, id: number) => {
+              (img.annotations = {
+                mask: img.annotations.map((anno: any) => {
                   const { mask: paths_, category } = anno;
                   const paths = paths_.map((points: number[]) => ({
                     points: Array.from(
@@ -96,72 +86,71 @@ const App = () => {
                       })
                     ),
                   }));
-                  return new MaskLabel({
+                  return {
                     paths,
-                    id,
                     category: category as string,
-                  });
-                }
-              ))
+                  };
+                }),
+              })
           );
 
+        // structure: [
+        //   [16, 14],
+        //   [14, 12],
+        //   [17, 15],
+        //   [15, 13],
+        //   [12, 13],
+        //   [6, 12],
+        //   [7, 13],
+        //   [6, 7],
+        //   [6, 8],
+        //   [7, 9],
+        //   [8, 10],
+        //   [9, 11],
+        //   [2, 3],
+        //   [1, 2],
+        //   [1, 3],
+        //   [2, 4],
+        //   [3, 5],
+        //   [4, 6],
+        //   [5, 7],
+        // ]
+
         if (task === "keypoints")
-          data.forEach((img: any) =>
-            (img.annotations = img.annotations
-              .map((anno: any, id: number) => {
-                const { keypoints } = anno;
-                const points = Array.from(
-                  { length: keypoints.length / 3 },
-                  (_, i) => ({
-                    x: keypoints[3 * i],
-                    y: keypoints[3 * i + 1],
-                    vis: keypoints[3 * i + 2] === 2,
-                    sid: keypoints[3 * i + 2] === 0 ? -1 : i + 1,
-                  })
-                ).filter((pt) => pt.sid !== -1);
+          data.forEach(
+            (img: any) =>
+              (img.annotations = {
+                keypoints: img.annotations.map((anno: any) => {
+                  const { keypoints } = anno;
+                  const points = Array.from(
+                    { length: keypoints.length / 3 },
+                    (_, i) => ({
+                      x: keypoints[3 * i],
+                      y: keypoints[3 * i + 1],
+                      vis: keypoints[3 * i + 2] === 2,
+                      sid: keypoints[3 * i + 2] === 0 ? -1 : i + 1,
+                    })
+                  ).filter((pt) => pt.sid !== -1);
 
-                if (!points.length) return;
-
-                return new KeypointsLabel({
-                  keypoints: {
-                    points,
-                    structure: [
-                      [16, 14],
-                      [14, 12],
-                      [17, 15],
-                      [15, 13],
-                      [12, 13],
-                      [6, 12],
-                      [7, 13],
-                      [6, 7],
-                      [6, 8],
-                      [7, 9],
-                      [8, 10],
-                      [9, 11],
-                      [2, 3],
-                      [1, 2],
-                      [1, 3],
-                      [2, 4],
-                      [3, 5],
-                      [4, 6],
-                      [5, 7],
-                    ],
-                  },
-                  id,
-                  category: "person",
-                });
+                  return {
+                    keypoints: points,
+                    category: "person",
+                  };
+                }),
               })
-              .filter((l: undefined | KeypointsLabel) => l)).forEach(
-              (l: KeypointsLabel, i: number) => (l.id = i)
-            )
           );
 
         if (task === "detection+segmentation")
           data.forEach(
             (img: any) =>
-              (img.annotations = img.annotations
-                .map((anno: any, id: number) => {
-                  const { category, x, y, w, h, mask: paths_ } = anno;
+              (img.annotations = {
+                box: img.annotations.map((anno: any) => {
+                  const { category, x, y, w, h } = anno;
+                  return { x, y, w, h, category };
+                }),
+
+                mask: img.annotations.map((anno: any) => {
+                  const { category, mask: paths_ } = anno;
                   const paths = paths_.map((points: number[]) => ({
                     points: Array.from(
                       { length: points.length / 2 },
@@ -172,48 +161,45 @@ const App = () => {
                     ),
                   }));
 
-                  return [
-                    new BoxLabel({ x, y, w, h, category, id: 2 * id }),
-                    new MaskLabel({ paths, category, id: 2 * id + 1 }),
-                  ];
-                })
-                .flat())
+                  return { paths, category };
+                }),
+              })
           );
 
-        if (task === "keypoints+segmentation")
-          data.forEach(
-            (img: any) =>
-              (img.annotations = img.annotations
-                .map((anno: any) => {
-                  const { category, mask: paths_, keypoints } = anno;
-                  const paths = paths_.map((points: number[]) => ({
-                    points: Array.from(
-                      { length: points.length / 2 },
-                      (_, i) => ({
-                        x: points[2 * i],
-                        y: points[2 * i + 1],
-                      })
-                    ),
-                  }));
+        // if (task === "keypoints+segmentation")
+        //   data.forEach(
+        //     (img: any) =>
+        //       (img.annotations = img.annotations
+        //         .map((anno: any) => {
+        //           const { category, mask: paths_, keypoints } = anno;
+        //           const paths = paths_.map((points: number[]) => ({
+        //             points: Array.from(
+        //               { length: points.length / 2 },
+        //               (_, i) => ({
+        //                 x: points[2 * i],
+        //                 y: points[2 * i + 1],
+        //               })
+        //             ),
+        //           }));
 
-                  return [
-                    { category, paths, label: "Mask" },
-                    ...Array.from({ length: keypoints.length / 3 }, (_, i) => ({
-                      x: keypoints[3 * i],
-                      y: keypoints[3 * i + 1],
-                      visible: keypoints[3 * i + 2],
-                      category: `kp-${i}`,
-                      label: "Point",
-                    })).filter((p) => p.visible === 2),
-                  ];
-                })
-                .flat()
-                .map((l: any, id: number) =>
-                  l.label === "Mask"
-                    ? new MaskLabel({ ...l, id })
-                    : new PointLabel({ ...l, id })
-                ))
-          );
+        //           return [
+        //             { category, paths, label: "Mask" },
+        //             ...Array.from({ length: keypoints.length / 3 }, (_, i) => ({
+        //               x: keypoints[3 * i],
+        //               y: keypoints[3 * i + 1],
+        //               visible: keypoints[3 * i + 2],
+        //               category: `kp-${i}`,
+        //               label: "Point",
+        //             })).filter((p) => p.visible === 2),
+        //           ];
+        //         })
+        //         .flat()
+        //         .map((l: any, id: number) =>
+        //           l.label === "Mask"
+        //             ? new MaskLabel({ ...l, id })
+        //             : new PointLabel({ ...l, id })
+        //         ))
+        //   );
 
         setImagesList(data);
       } catch (err) {
