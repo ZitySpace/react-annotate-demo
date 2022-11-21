@@ -48,6 +48,7 @@ const getAnnotations = requestTemplate((task: string) => ({
 const App = () => {
   const [task, setTask] = useState<string | null>(null);
   const [imagesList, setImagesList] = useState<ImageData[]>([]);
+  const [labelConfigs, setLabelConfigs] = useState<{ [key: string]: any }>({});
   const taskOptions = [
     "detection",
     "segmentation",
@@ -60,6 +61,7 @@ const App = () => {
     (async () => {
       try {
         const data = await getAnnotations(task);
+        const cfgs = {};
 
         data.forEach(
           (img: any) =>
@@ -68,59 +70,37 @@ const App = () => {
 
         if (task === "detection")
           data.forEach(
-            (img: any) => (img.annotations = { box: img.annotations })
+            (img: any) =>
+              (img.annotations = img.annotations.map((anno: any) => ({
+                ...anno,
+                type: "box",
+              })))
           );
 
         if (task === "segmentation")
           data.forEach(
             (img: any) =>
-              (img.annotations = {
-                mask: img.annotations.map((anno: any) => {
-                  const { mask: paths_, category } = anno;
-                  const paths = paths_.map((points: number[]) => ({
-                    points: Array.from(
-                      { length: points.length / 2 },
-                      (_, i) => ({
-                        x: points[2 * i],
-                        y: points[2 * i + 1],
-                      })
-                    ),
-                  }));
-                  return {
-                    paths,
-                    category: category as string,
-                  };
-                }),
-              })
+              (img.annotations = img.annotations.map((anno: any) => {
+                const { mask: paths_, category } = anno;
+                const paths = paths_.map((points: number[]) => ({
+                  points: Array.from({ length: points.length / 2 }, (_, i) => ({
+                    x: points[2 * i],
+                    y: points[2 * i + 1],
+                  })),
+                }));
+                return {
+                  paths,
+                  category: category as string,
+                  type: "mask",
+                };
+              }))
           );
 
-        // structure: [
-        //   [16, 14],
-        //   [14, 12],
-        //   [17, 15],
-        //   [15, 13],
-        //   [12, 13],
-        //   [6, 12],
-        //   [7, 13],
-        //   [6, 7],
-        //   [6, 8],
-        //   [7, 9],
-        //   [8, 10],
-        //   [9, 11],
-        //   [2, 3],
-        //   [1, 2],
-        //   [1, 3],
-        //   [2, 4],
-        //   [3, 5],
-        //   [4, 6],
-        //   [5, 7],
-        // ]
-
-        if (task === "keypoints")
+        if (task === "keypoints") {
           data.forEach(
             (img: any) =>
-              (img.annotations = {
-                keypoints: img.annotations.map((anno: any) => {
+              (img.annotations = img.annotations
+                .map((anno: any) => {
                   const { keypoints } = anno;
                   const points = Array.from(
                     { length: keypoints.length / 3 },
@@ -135,36 +115,62 @@ const App = () => {
                   return {
                     keypoints: points,
                     category: "person",
+                    type: "keypoints",
                   };
-                }),
-              })
+                })
+                .filter((anno: any) => anno.keypoints.length))
           );
 
-        if (task === "detection+segmentation")
-          data.forEach(
-            (img: any) =>
-              (img.annotations = {
-                box: img.annotations.map((anno: any) => {
-                  const { category, x, y, w, h } = anno;
-                  return { x, y, w, h, category };
-                }),
+          cfgs["keypoints"] = {
+            structure: [
+              [16, 14],
+              [14, 12],
+              [17, 15],
+              [15, 13],
+              [12, 13],
+              [6, 12],
+              [7, 13],
+              [6, 7],
+              [6, 8],
+              [7, 9],
+              [8, 10],
+              [9, 11],
+              [2, 3],
+              [1, 2],
+              [1, 3],
+              [2, 4],
+              [3, 5],
+              [4, 6],
+              [5, 7],
+            ],
+          };
+        }
 
-                mask: img.annotations.map((anno: any) => {
-                  const { category, mask: paths_ } = anno;
-                  const paths = paths_.map((points: number[]) => ({
-                    points: Array.from(
-                      { length: points.length / 2 },
-                      (_, i) => ({
-                        x: points[2 * i],
-                        y: points[2 * i + 1],
-                      })
-                    ),
-                  }));
+        // if (task === "detection+segmentation")
+        //   data.forEach(
+        //     (img: any) =>
+        //       (img.annotations = {
+        //         box: img.annotations.map((anno: any) => {
+        //           const { category, x, y, w, h } = anno;
+        //           return { x, y, w, h, category };
+        //         }),
 
-                  return { paths, category };
-                }),
-              })
-          );
+        //         mask: img.annotations.map((anno: any) => {
+        //           const { category, mask: paths_ } = anno;
+        //           const paths = paths_.map((points: number[]) => ({
+        //             points: Array.from(
+        //               { length: points.length / 2 },
+        //               (_, i) => ({
+        //                 x: points[2 * i],
+        //                 y: points[2 * i + 1],
+        //               })
+        //             ),
+        //           }));
+
+        //           return { paths, category };
+        //         }),
+        //       })
+        //   );
 
         // if (task === "keypoints+segmentation")
         //   data.forEach(
@@ -201,6 +207,7 @@ const App = () => {
         //         ))
         //   );
 
+        setLabelConfigs(cfgs);
         setImagesList(data);
       } catch (err) {
         console.log(err instanceof Error ? err.message : (err as string));
@@ -268,6 +275,7 @@ const App = () => {
           console.log(o, " -> ", n, " @ ", t);
           return true;
         }}
+        labelConfigs={labelConfigs}
       />
     </div>
   );
