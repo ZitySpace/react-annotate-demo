@@ -2391,10 +2391,10 @@
   resolved "https://registry.yarnpkg.com/@xtuc/long/-/long-4.2.2.tgz#d291c6a4e97989b5c61d9acf396ae4fe133a718d"
   integrity sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==
 
-"@zityspace/react-annotate@^0.11.0":
-  version "0.11.0"
-  resolved "https://registry.yarnpkg.com/@zityspace/react-annotate/-/react-annotate-0.11.0.tgz#4573ce868979a2581ead11c1107f045f88c24b58"
-  integrity sha512-77ExelLHgbHcCl0+SSLSKDG8V9B069XqcI06L+G3DaHG7LU4Jo1ZoIhuhFk6rTGGuXe8BYTN6lJ5m8acrJzAkw==
+"@zityspace/react-annotate@^0.11.1-beta.1":
+  version "0.11.1-beta.1"
+  resolved "https://registry.yarnpkg.com/@zityspace/react-annotate/-/react-annotate-0.11.1-beta.1.tgz#e6b02274b373d7de9d3878e21822177550522340"
+  integrity sha512-9DMbDRKtXXWVWqsTZ3khRDWq6D7YpSdLRkIXgnU/bzXqQtmQUFu6xwE3rxXi1MblSg6tGo9Bmkzoefsjo8qvEg==
   dependencies:
     "@headlessui/react" "^1.7.3"
     "@use-gesture/react" "^10.2.4"
